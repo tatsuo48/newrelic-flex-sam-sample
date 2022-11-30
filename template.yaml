@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  lambda function
+Resources:
+  NriFlex:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: nri-flex/
+      Handler: nri-flex
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Timeout: 60
+      MemorySize: 128
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - subnet-aaaaaaaaa
+          - subnet-bbbbbbbbb
+      Events:
+        Daily:
+          Type: Schedule
+          Properties:
+            Schedule: cron(*/5 * * * ? *)
+            Name: exmaple-schedule
+            Description: Example schedule
+            Enabled: true
+      Environment:
+        Variables:
+          INSIGHTS_URL: https://insights-collector.newrelic.com/v1/accounts/{{your account ID}}/events
+          DB_PASSWORD: "{{resolve:secretsmanager:DB_PASSWORD}}"
+          INSIGHTS_API_KEY: "{{resolve:secretsmanager:NR_LICENSE_KEY}}"
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: sg
+      GroupName: sample-sg
+      VpcId: vpc-ccccccccc
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: -1
